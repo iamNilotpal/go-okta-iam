@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 
 	"github.com/iamNilotpal/iam/internal/models"
@@ -56,6 +57,53 @@ func (h *Handler) GetGroups(w http.ResponseWriter, r *http.Request) {
 
 	h.log.Infow("Groups retrieved successfully", zap.Int("count", len(groups)))
 	response.RespondSuccess(w, http.StatusOK, "Success", groups)
+}
+
+func (h *Handler) GetGroup(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+	if groupID == "" {
+		h.respondWithError(w, "Group ID is required", http.StatusBadRequest)
+		return
+	}
+
+	h.log.Infow("Get group request received", "groupId", groupID)
+
+	group, err := h.groupsSvc.GetGroup(r.Context(), groupID)
+	if err != nil {
+		h.log.Infow("Failed to get group", zap.Error(err), "groupId", groupID)
+		h.respondWithError(w, "Failed to retrieve group", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Infow("Group retrieved successfully", zap.String("groupId", groupID))
+	response.RespondSuccess(w, http.StatusOK, "Success", group)
+}
+
+func (h *Handler) UpdateGroup(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+	if groupID == "" {
+		h.respondWithError(w, "Group ID is required", http.StatusBadRequest)
+		return
+	}
+
+	h.log.Infow("Update group request received", "groupId", groupID)
+
+	var req models.UpdateGroupRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.log.Infow("Failed to decode update group request", zap.Error(err))
+		h.respondWithError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	group, err := h.groupsSvc.UpdateGroup(r.Context(), groupID, &req)
+	if err != nil {
+		h.log.Infow("Failed to update group", zap.Error(err), "groupId", groupID)
+		h.respondWithError(w, "Failed to update group", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Infow("Group updated successfully", "groupId", groupID)
+	response.RespondSuccess(w, http.StatusOK, "Group updated successfully", group)
 }
 
 func (h *Handler) respondWithError(w http.ResponseWriter, message string, statusCode int) {
