@@ -132,3 +132,74 @@ func (s *Service) DeleteGroup(ctx context.Context, groupID string) error {
 	s.log.Infow("Group deleted successfully from Okta", "groupId", groupID)
 	return nil
 }
+
+func (s *Service) AddUserToGroup(ctx context.Context, groupID, userID string) error {
+	s.log.Infow("Adding user to group in Okta", "groupId", groupID, "userId", userID)
+
+	response, err := s.client.GroupAPI.AssignUserToGroup(ctx, groupID, userID).Execute()
+	if err != nil {
+		s.log.Infow("Failed to add user to group in Okta", zap.Error(err),
+			"groupId", groupID,
+			"userId", userID,
+			"statusCode", response.StatusCode,
+		)
+		return fmt.Errorf("failed to add user to group in Okta: %w", err)
+	}
+
+	s.log.Infow("User added to group successfully in Okta", "groupId", groupID, "userId", userID)
+	return nil
+}
+
+func (s *Service) RemoveUserFromGroup(ctx context.Context, groupID, userID string) error {
+	s.log.Infow("Removing user from group in Okta", "groupId", groupID, "userId", userID)
+
+	response, err := s.client.GroupAPI.UnassignUserFromGroup(ctx, groupID, userID).Execute()
+	if err != nil {
+		s.log.Infow("Failed to remove user from group in Okta", zap.Error(err),
+			"groupId", groupID,
+			"userId", userID,
+			"statusCode", response.StatusCode,
+		)
+		return fmt.Errorf("failed to remove user from group in Okta: %w", err)
+	}
+
+	s.log.Infow("User removed from group successfully in Okta", "groupId", groupID, "userId", userID)
+	return nil
+}
+
+func (s *Service) GetGroupMembers(ctx context.Context, groupID string) ([]*models.User, error) {
+	s.log.Infow("Getting group members from Okta", "groupId", groupID)
+
+	users, response, err := s.client.GroupAPI.ListGroupUsers(ctx, groupID).Execute()
+	if err != nil {
+		s.log.Infow("Failed to get group members from Okta", zap.Error(err),
+			"groupId", groupID,
+			"statusCode", response.StatusCode,
+		)
+		return nil, fmt.Errorf("failed to get group members from Okta: %w", err)
+	}
+
+	result := make([]*models.User, len(users))
+	for i, user := range users {
+		result[i] = models.ConvertOktaUserToModel(&okta.User{
+			Id:                    user.Id,
+			Created:               user.Created,
+			Activated:             user.Activated,
+			LastLogin:             user.LastLogin,
+			Credentials:           user.Credentials,
+			LastUpdated:           user.LastUpdated,
+			PasswordChanged:       user.PasswordChanged,
+			Profile:               user.Profile,
+			RealmId:               user.RealmId,
+			Status:                user.Status,
+			StatusChanged:         user.StatusChanged,
+			TransitioningToStatus: user.TransitioningToStatus,
+			Type:                  user.Type,
+			Links:                 user.Links,
+			AdditionalProperties:  user.AdditionalProperties,
+		})
+	}
+
+	s.log.Infow("Group members retrieved successfully from Okta", "groupId", groupID, "memberCount", len(result))
+	return result, nil
+}
