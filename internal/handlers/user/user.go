@@ -165,6 +165,44 @@ func (h *Handler) DeactivateUser(w http.ResponseWriter, r *http.Request) {
 	response.RespondSuccess(w, http.StatusOK, "User deactivated successfully", nil)
 }
 
+func (h *Handler) SuspendUser(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		h.respondWithError(w, "User ID is required", http.StatusBadRequest)
+		return
+	}
+
+	h.log.Infow("Suspend user request received", "userId", userID)
+
+	if err := h.usersSvc.SuspendUser(r.Context(), userID); err != nil {
+		h.log.Infow("Failed to suspend user", zap.Error(err), "userId", userID)
+		h.respondWithError(w, "Failed to suspend user", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Infow("User suspended successfully", "userId", userID)
+	response.RespondSuccess(w, http.StatusOK, "User suspended successfully", nil)
+}
+
+func (h *Handler) UnSuspendUser(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userID")
+	if userID == "" {
+		h.respondWithError(w, "User ID is required", http.StatusBadRequest)
+		return
+	}
+
+	h.log.Infow("Unsuspend user request received", "userId", userID)
+
+	if err := h.usersSvc.UnsuspendUser(r.Context(), userID); err != nil {
+		h.log.Infow("Failed to unsuspend user", zap.Error(err), "userId", userID)
+		h.respondWithError(w, "Failed to unsuspend user", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Infow("User unsuspended successfully", "userId", userID)
+	response.RespondSuccess(w, http.StatusOK, "User unsuspended successfully", nil)
+}
+
 func (h *Handler) respondWithError(w http.ResponseWriter, message string, statusCode int) {
 	response.RespondError(w, statusCode, "API_ERROR", message, nil)
 }
