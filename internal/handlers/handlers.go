@@ -7,8 +7,10 @@ import (
 
 	"github.com/iamNilotpal/iam/internal/config"
 	group_handlers "github.com/iamNilotpal/iam/internal/handlers/group"
+	role_handlers "github.com/iamNilotpal/iam/internal/handlers/role"
 	user_handlers "github.com/iamNilotpal/iam/internal/handlers/user"
 	group_service "github.com/iamNilotpal/iam/internal/services/group"
+	role_service "github.com/iamNilotpal/iam/internal/services/role"
 	user_service "github.com/iamNilotpal/iam/internal/services/user"
 )
 
@@ -22,6 +24,7 @@ type Config struct {
 	Log           *zap.SugaredLogger
 	UsersService  *user_service.Service
 	GroupsService *group_service.Service
+	RolesService  *role_service.Service
 }
 
 func Setup(cfg *Config) {
@@ -33,31 +36,70 @@ func Setup(cfg *Config) {
 
 	userHandlers := user_handlers.New(cfg.Log, cfg.UsersService)
 	groupHandlers := group_handlers.New(cfg.Log, cfg.GroupsService)
+	roleHandlers := role_handlers.New(cfg.Log, cfg.RolesService)
 
 	cfg.Router.Route(APIVersion1URL, func(r chi.Router) {
 		// User management endpoints.
 		r.Route("/users", func(r chi.Router) {
 			r.Get("/", userHandlers.GetUsers)
 			r.Post("/", userHandlers.CreateUser)
-			r.Get("/{userID}", userHandlers.GetUser)
-			r.Put("/{userID}", userHandlers.UpdateUser)
-			r.Delete("/{userID}", userHandlers.DeleteUser)
-			r.Post("/{userID}/activate", userHandlers.ActivateUser)
-			r.Post("/{userID}/deactivate", userHandlers.DeactivateUser)
-			r.Post("/{userID}/suspend", userHandlers.SuspendUser)
-			r.Post("/{userID}/unsuspend", userHandlers.UnSuspendUser)
+
+			r.Route("/{userID}", func(r chi.Router) {
+				r.Get("/", userHandlers.GetUser)
+				r.Put("/", userHandlers.UpdateUser)
+				r.Delete("/", userHandlers.DeleteUser)
+
+				// User lifecycle actions.
+				r.Post("/activate", userHandlers.ActivateUser)
+				r.Post("/deactivate", userHandlers.DeactivateUser)
+				r.Post("/suspend", userHandlers.SuspendUser)
+				r.Post("/unsuspend", userHandlers.UnSuspendUser)
+
+				// User roles sub-resource.
+				r.Route("/roles", func(r chi.Router) {
+					r.Get("/", roleHandlers.GetUserRoles)
+					r.Put("/{roleID}", roleHandlers.AssignRoleToUser)
+					r.Delete("/{roleID}", roleHandlers.UnassignRoleFromUser)
+				})
+			})
 		})
 
 		// Group management endpoints.
 		r.Route("/groups", func(r chi.Router) {
 			r.Get("/", groupHandlers.GetGroups)
 			r.Post("/", groupHandlers.CreateGroup)
-			r.Get("/{groupID}", groupHandlers.GetGroup)
-			r.Put("/{groupID}", groupHandlers.UpdateGroup)
-			r.Delete("/{groupID}", groupHandlers.DeleteGroup)
-			r.Get("/{groupID}/members", groupHandlers.GetGroupMembers)
-			r.Post("/{groupID}/users/{userID}", groupHandlers.AddUserToGroup)
-			r.Delete("/{groupID}/users/{userID}", groupHandlers.RemoveUserFromGroup)
+
+			r.Route("/{groupID}", func(r chi.Router) {
+				r.Get("/", groupHandlers.GetGroup)
+				r.Put("/", groupHandlers.UpdateGroup)
+				r.Delete("/", groupHandlers.DeleteGroup)
+
+				// Group members sub-resource.
+				r.Route("/members", func(r chi.Router) {
+					r.Get("/", groupHandlers.GetGroupMembers)
+					r.Put("/{userID}", groupHandlers.AddUserToGroup)
+					r.Delete("/{userID}", groupHandlers.RemoveUserFromGroup)
+				})
+
+				// Group roles sub-resource.
+				r.Route("/roles", func(r chi.Router) {
+					r.Get("/", roleHandlers.GetGroupRoles)
+					r.Put("/{roleID}", roleHandlers.AssignRoleToGroup)
+					r.Delete("/{roleID}", roleHandlers.UnassignRoleFromGroup)
+				})
+			})
+		})
+
+		// Role management endpoints.
+		r.Route("/roles", func(r chi.Router) {
+			r.Get("/", roleHandlers.GetRoles)
+			r.Post("/", roleHandlers.CreateRole)
+
+			r.Route("/{roleID}", func(r chi.Router) {
+				r.Get("/", roleHandlers.GetRole)
+				r.Put("/", roleHandlers.UpdateRole)
+				r.Delete("/", roleHandlers.DeleteRole)
+			})
 		})
 	})
 }

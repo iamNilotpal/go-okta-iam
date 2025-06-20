@@ -66,10 +66,9 @@ func run(log *zap.SugaredLogger) error {
 	groupsService := group_service.New(log, oktaClient.SDK())
 
 	handlers.Setup(&handlers.Config{
-		Config: cfg,
-		Log:    log,
-		Router: router,
-
+		Config:        cfg,
+		Log:           log,
+		Router:        router,
 		UsersService:  usersService,
 		GroupsService: groupsService,
 	})
