@@ -67,3 +67,49 @@ func (s *Service) GetRoles(ctx context.Context) ([]*models.Role, error) {
 	s.log.Infow("Roles retrieved successfully from Okta", "count", len(result))
 	return result, nil
 }
+
+func (s *Service) UpdateRole(ctx context.Context, roleID string, req *models.UpdateRoleRequest) (*models.Role, error) {
+	s.log.Infow("Updating role in Okta", "roleId", roleID)
+
+	updateRoleRequest := okta.UpdateIamRoleRequest{}
+	updateNeeded := false
+
+	if req.Name != "" {
+		updateNeeded = true
+		updateRoleRequest.Label = req.Name
+	}
+
+	if req.Description != "" {
+		updateNeeded = true
+		updateRoleRequest.Description = req.Description
+	}
+
+	if !updateNeeded {
+		return s.GetRole(ctx, roleID)
+	}
+
+	role, response, err := s.client.RoleAPI.ReplaceRole(ctx, roleID).Instance(updateRoleRequest).Execute()
+	if err != nil {
+		s.log.Infow("Failed to update role in Okta", zap.Error(err), "roleId", roleID, "statusCode", response.StatusCode)
+		return nil, fmt.Errorf("failed to update role in Okta: %w", err)
+	}
+
+	s.log.Infow("Role updated successfully in Okta", "roleId", roleID)
+	return models.ConvertOktaIamRoleToModel(role), nil
+}
+
+func (s *Service) DeleteRole(ctx context.Context, roleID string) error {
+	s.log.Infow("Deleting role from Okta", "roleId", roleID)
+
+	response, err := s.client.RoleAPI.DeleteRole(ctx, roleID).Execute()
+	if err != nil {
+		s.log.Infow("Failed to delete role from Okta", zap.Error(err),
+			"roleId", roleID,
+			"statusCode", response.StatusCode,
+		)
+		return fmt.Errorf("failed to delete role from Okta: %w", err)
+	}
+
+	s.log.Infow("Role deleted successfully from Okta", "roleId", roleID)
+	return nil
+}
