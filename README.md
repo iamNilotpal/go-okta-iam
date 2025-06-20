@@ -17,20 +17,22 @@ through Okta integration.
 
 ### Users
 
-- `GET /api/users` - List all users
-- `POST /api/users` - Create new user
-- `GET /api/users/{id}` - Get user by ID
-- `PUT /api/users/{id}` - Update user
-- `DELETE /api/users/{id}` - Delete (deactivate) user
-- `POST /api/users/{id}/activate` - Activate user
-- `POST /api/users/{id}/deactivate` - Deactivate user
+- `GET /api/v1/users` - List all users
+- `POST /api/v1/users` - Create new user
+- `GET /api/v1/users/{userID}` - Get user by ID
+- `PUT /api/v1/users/{userID}` - Update user
+- `DELETE /api/v1/users/{userID}` - Delete (deactivate) user
+- `POST /api/v1/users/{userID}/activate` - Activate user
+- `POST /api/v1/users/{userID}/deactivate` - Deactivate user
+- `POST /api/v1/users/{userID}/suspend` - Suspend user
+- `POST /api/v1/users/{userID}/unsuspend` - Unsuspend user
 
 ### Groups
 
-- `GET /api/groups` - List all groups
-- `POST /api/groups` - Create new group
-- `GET /api/groups/{id}` - Get group by ID
-- `PUT /api/groups/{id}` - Update group
-- `DELETE /api/groups/{id}` - Delete group
-- `POST /api/groups/{groupId}/users/{userId}` - Add user to group
-- `DELETE /api/groups/{groupId}/users/{userId}` - Remove user from group
+- `GET /api/v1/groups` - List all groups
+- `POST /api/v1/groups` - Create new group
+- `GET /api/v1/groups/{id}` - Get group by ID
+- `PUT /api/v1/groups/{id}` - Update group
+- `DELETE /api/v1/groups/{id}` - Delete group
+- `POST /api/v1/groups/{groupId}/users/{userId}` - Add user to group
+- `DELETE /api/v1/groups/{groupId}/users/{userId}` - Remove user from group
