@@ -230,3 +230,72 @@ func (s *Service) SetUserPassword(ctx context.Context, userID, newPassword strin
 	s.log.Infow("User password set successfully in Okta", "userId", userID)
 	return nil
 }
+
+func (s *Service) ExpireUserPassword(ctx context.Context, userID string) error {
+	s.log.Infow("Expiring user password in Okta", "userId", userID)
+
+	_, response, err := s.client.UserAPI.ExpirePassword(ctx, userID).Execute()
+	if err != nil {
+		s.log.Infow("Failed to expire user password in Okta", zap.Error(err),
+			"userId", userID,
+			"statusCode", response.StatusCode,
+		)
+		return fmt.Errorf("failed to expire user password in Okta: %w", err)
+	}
+
+	s.log.Infow("User password expired successfully in Okta", "userId", userID)
+	return nil
+}
+
+func (s *Service) GetUserGroups(ctx context.Context, userID string) ([]*models.Group, error) {
+	s.log.Infow("Getting user groups from Okta", "userId", userID)
+
+	groups, response, err := s.client.UserAPI.ListUserGroups(ctx, userID).Execute()
+	if err != nil {
+		s.log.Infow("Failed to get user groups from Okta", zap.Error(err),
+			"userId", userID,
+			"statusCode", response.StatusCode,
+		)
+		return nil, fmt.Errorf("failed to get user groups from Okta: %w", err)
+	}
+
+	result := make([]*models.Group, len(groups))
+	for i := range groups {
+		result[i] = models.ConvertOktaGroupToModel(&groups[i])
+	}
+
+	s.log.Infow("User groups retrieved successfully from Okta", "userId", userID, "groupCount", len(result))
+	return result, nil
+}
+
+func (s *Service) SuspendUser(ctx context.Context, userID string) error {
+	s.log.Infow("Suspending user in Okta", "userId", userID)
+
+	response, err := s.client.UserAPI.SuspendUser(ctx, userID).Execute()
+	if err != nil {
+		s.log.Infow("Failed to suspend user in Okta", zap.Error(err),
+			"userId", userID,
+			"statusCode", response.StatusCode,
+		)
+		return fmt.Errorf("failed to suspend user in Okta: %w", err)
+	}
+
+	s.log.Infow("User suspended successfully in Okta", "userId", userID)
+	return nil
+}
+
+func (s *Service) UnsuspendUser(ctx context.Context, userID string) error {
+	s.log.Infow("Unsuspending user in Okta", "userId", userID)
+
+	response, err := s.client.UserAPI.UnsuspendUser(ctx, userID).Execute()
+	if err != nil {
+		s.log.Infow("Failed to unsuspend user in Okta", zap.Error(err),
+			"userId", userID,
+			"statusCode", response.StatusCode,
+		)
+		return fmt.Errorf("failed to unsuspend user in Okta: %w", err)
+	}
+
+	s.log.Infow("User unsuspended successfully in Okta", "userId", userID)
+	return nil
+}
