@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	GroupTypeApp  string = "APP_GROUP"
-	GroupTypeOkta string = "OKTA_GROUP"
+	GroupTypeBuiltIn string = "BUILT_IN"
+	GroupTypeApp     string = "APP_GROUP"
+	GroupTypeOkta    string = "OKTA_GROUP"
 )
 
 // Group represents a collection of users with similar access needs.
