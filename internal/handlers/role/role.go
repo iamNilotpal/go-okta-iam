@@ -79,6 +79,52 @@ func (h *Handler) GetRole(w http.ResponseWriter, r *http.Request) {
 	response.RespondSuccess(w, http.StatusOK, "Success", role)
 }
 
+func (h *Handler) UpdateRole(w http.ResponseWriter, r *http.Request) {
+	roleID := chi.URLParam(r, "roleID")
+	if roleID == "" {
+		h.respondWithError(w, "Role ID is required", http.StatusBadRequest)
+		return
+	}
+
+	h.log.Infow("Update role request received", "roleId", roleID)
+
+	var req models.UpdateRoleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.log.Infow("Failed to decode update role request", zap.Error(err))
+		h.respondWithError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	role, err := h.rolesSvc.UpdateRole(r.Context(), roleID, &req)
+	if err != nil {
+		h.log.Infow("Failed to update role", zap.Error(err), "roleId", roleID)
+		h.respondWithError(w, "Failed to update role", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Infow("Role updated successfully", "roleId", roleID)
+	response.RespondSuccess(w, http.StatusOK, "Role updated successfully", role)
+}
+
+func (h *Handler) DeleteRole(w http.ResponseWriter, r *http.Request) {
+	roleID := chi.URLParam(r, "roleID")
+	if roleID == "" {
+		h.respondWithError(w, "Role ID is required", http.StatusBadRequest)
+		return
+	}
+
+	h.log.Infow("Delete role request received", "roleId", roleID)
+
+	if err := h.rolesSvc.DeleteRole(r.Context(), roleID); err != nil {
+		h.log.Infow("Failed to delete role", zap.Error(err), "roleId", roleID)
+		h.respondWithError(w, "Failed to delete role", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Infow("Role deleted successfully", "roleId", roleID)
+	response.RespondSuccess(w, http.StatusOK, "Role deleted successfully", nil)
+}
+
 func (h *Handler) respondWithError(w http.ResponseWriter, message string, statusCode int) {
 	response.RespondError(w, statusCode, "API_ERROR", message, nil)
 }
