@@ -106,6 +106,45 @@ func (h *Handler) UpdateGroup(w http.ResponseWriter, r *http.Request) {
 	response.RespondSuccess(w, http.StatusOK, "Group updated successfully", group)
 }
 
+func (h *Handler) DeleteGroup(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+	if groupID == "" {
+		h.respondWithError(w, "Group ID is required", http.StatusBadRequest)
+		return
+	}
+
+	h.log.Infow("Delete group request received", "groupId", groupID)
+
+	if err := h.groupsSvc.DeleteGroup(r.Context(), groupID); err != nil {
+		h.log.Infow("Failed to delete group", zap.Error(err), "groupId", groupID)
+		h.respondWithError(w, "Failed to delete group", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Infow("Group deleted successfully", "groupId", groupID)
+	response.RespondSuccess(w, http.StatusOK, "Group deleted successfully", nil)
+}
+
+func (h *Handler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+	if groupID == "" {
+		h.respondWithError(w, "Group ID is required", http.StatusBadRequest)
+		return
+	}
+
+	h.log.Infow("Get group members request received", "groupId", groupID)
+
+	members, err := h.groupsSvc.GetGroupMembers(r.Context(), groupID)
+	if err != nil {
+		h.log.Infow("Failed to get group members", zap.Error(err), "groupId", groupID)
+		h.respondWithError(w, "Failed to retrieve group members", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Infow("Group members retrieved successfully", "groupId", groupID, "memberCount", len(members))
+	response.RespondSuccess(w, http.StatusOK, "Success", members)
+}
+
 func (h *Handler) respondWithError(w http.ResponseWriter, message string, statusCode int) {
 	response.RespondError(w, statusCode, "API_ERROR", message, nil)
 }
