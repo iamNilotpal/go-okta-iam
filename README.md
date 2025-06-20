@@ -34,5 +34,6 @@ through Okta integration.
 - `GET /api/v1/groups/{groupID}` - Get group by ID
 - `PUT /api/v1/groups/{groupID}` - Update group
 - `DELETE /api/v1/groups/{groupID}` - Delete group
+- `GET /api/v1/groups/{groupID}/members` - Get group members by ID
 - `POST /api/v1/groups/{groupID}/users/{userID}` - Add user to group
 - `DELETE /api/v1/groups/{groupID}/users/{userID}` - Remove user from group
