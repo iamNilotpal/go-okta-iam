@@ -19,7 +19,6 @@ type Permission struct {
 	Action      string    `json:"action"`
 	Created     time.Time `json:"created"`
 	LastUpdated time.Time `json:"lastUpdated"`
-	Scope       string    `json:"scope,omitempty"`
 }
 
 // CreatePermissionRequest represents the data needed to create a new permission.
@@ -28,7 +27,6 @@ type CreatePermissionRequest struct {
 	Description string `json:"description"`
 	Resource    string `json:"resource"`
 	Action      string `json:"action"`
-	Scope       string `json:"scope,omitempty"`
 }
 
 // UpdatePermissionRequest represents the data that can be updated for a permission.
@@ -37,5 +35,4 @@ type UpdatePermissionRequest struct {
 	Description string `json:"description,omitempty"`
 	Resource    string `json:"resource,omitempty"`
 	Action      string `json:"action,omitempty"`
-	Scope       string `json:"scope,omitempty"`
 }
