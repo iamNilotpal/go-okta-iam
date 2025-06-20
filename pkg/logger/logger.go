@@ -1,9 +1,3 @@
-// Package logger provides a centralized and configurable logging utility
-// based on the `go.uber.org/zap` library. It offers a structured logging
-// approach suitable for production environments, allowing for easy integration
-// and consistent log formatting across different services and applications.
-// The package simplifies the setup of a robust logger with predefined
-// configurations for output format, timestamps, and initial contextual fields.
 package logger
 
 import (

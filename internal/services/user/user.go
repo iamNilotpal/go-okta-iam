@@ -40,7 +40,6 @@ func (s *Service) CreateUser(ctx context.Context, req *models.CreateUserRequest)
 		}
 	}
 
-	// Execute the API call and handle the response
 	user, response, err := s.client.UserAPI.CreateUser(ctx).Body(createUserRequest).Activate(req.Activate).Execute()
 	if err != nil {
 		s.log.Infow("Failed to create user in Okta", zap.Error(err),
