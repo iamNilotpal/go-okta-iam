@@ -1,16 +1,13 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"time"
 )
 
 type Config struct {
-	JWT      *JWTConfig
-	Okta     *OktaConfig
-	Server   *ServerConfig
-	Frontend *FrontendConfig
+	Okta   *OktaConfig
+	Server *ServerConfig
 }
 
 type ServerConfig struct {
@@ -21,13 +18,10 @@ type ServerConfig struct {
 }
 
 type OktaConfig struct {
-	Domain       string
-	ClientID     string
-	ClientSecret string
-	APIToken     string
-	Issuer       string
-	Audience     string
-	RedirectURI  string
+	Domain   string
+	APIToken string
+	Issuer   string
+	Audience string
 }
 
 type FrontendConfig struct {
@@ -38,12 +32,8 @@ type JWTConfig struct {
 	Secret string
 }
 
-func LoadConfig() (*Config, error) {
-	oktaDomain := os.Getenv("OKTA_DOMAIN")
-
+func Load() (*Config, error) {
 	config := &Config{
-		JWT:      &JWTConfig{Secret: os.Getenv("JWT_SECRET")},
-		Frontend: &FrontendConfig{URL: os.Getenv("FRONTEND_URL")},
 		Server: &ServerConfig{
 			Port:         getEnvOrDefault("PORT", "8080"),
 			ReadTimeout:  getDurationOrDefault("READ_TIMEOUT", "10s"),
@@ -51,33 +41,14 @@ func LoadConfig() (*Config, error) {
 			IdleTimeout:  getDurationOrDefault("IDLE_TIMEOUT", "120s"),
 		},
 		Okta: &OktaConfig{
-			Domain:       oktaDomain,
-			Issuer:       os.Getenv("OKTA_ISSUER"),
-			Audience:     os.Getenv("OKTA_AUDIENCE"),
-			ClientID:     os.Getenv("OKTA_CLIENT_ID"),
-			APIToken:     os.Getenv("OKTA_API_TOKEN"),
-			RedirectURI:  os.Getenv("OKTA_REDIRECT_URI"),
-			ClientSecret: os.Getenv("OKTA_CLIENT_SECRET"),
+			Domain:   os.Getenv("OKTA_DOMAIN"),
+			Issuer:   os.Getenv("OKTA_ISSUER"),
+			Audience: os.Getenv("OKTA_AUDIENCE"),
+			APIToken: os.Getenv("OKTA_API_TOKEN"),
 		},
 	}
 
 	return config, nil
-}
-
-func (c *Config) GetOktaIssuer() string {
-	return c.Okta.Issuer
-}
-
-func (c *Config) GetOktaJWKSURL() string {
-	return fmt.Sprintf("%s/v1/keys", c.Okta.Issuer)
-}
-
-func (c *Config) GetOktaAuthURL() string {
-	return fmt.Sprintf("https://%s/oauth2/default/v1/authorize", c.Okta.Domain)
-}
-
-func (c *Config) GetOktaTokenURL() string {
-	return fmt.Sprintf("https://%s/oauth2/default/v1/token", c.Okta.Domain)
 }
 
 func getEnvOrDefault(key, defaultValue string) string {
