@@ -145,6 +145,48 @@ func (h *Handler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	response.RespondSuccess(w, http.StatusOK, "Success", members)
 }
 
+func (h *Handler) AddUserToGroup(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+	userID := chi.URLParam(r, "userID")
+
+	if groupID == "" || userID == "" {
+		h.respondWithError(w, "Both Group ID and User ID are required", http.StatusBadRequest)
+		return
+	}
+
+	h.log.Infow("Add user to group request received", "groupId", groupID, "userId", userID)
+
+	if err := h.groupsSvc.AddUserToGroup(r.Context(), groupID, userID); err != nil {
+		h.log.Infow("Failed to add user to group", zap.Error(err), "groupId", groupID, "userId", userID)
+		h.respondWithError(w, "Failed to add user to group", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Infow("User added to group successfully", "groupId", groupID, "userId", userID)
+	response.RespondSuccess(w, http.StatusOK, "User added to group successfully", nil)
+}
+
+func (h *Handler) RemoveUserFromGroup(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+	userID := chi.URLParam(r, "userID")
+
+	if groupID == "" || userID == "" {
+		h.respondWithError(w, "Both Group ID and User ID are required", http.StatusBadRequest)
+		return
+	}
+
+	h.log.Infow("Remove user from group request received", "groupId", groupID, "userId", userID)
+
+	if err := h.groupsSvc.RemoveUserFromGroup(r.Context(), groupID, userID); err != nil {
+		h.log.Infow("Failed to remove user from group", zap.Error(err), "groupId", groupID, "userId", userID)
+		h.respondWithError(w, "Failed to remove user from group", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Infow("User removed from group successfully", "groupId", groupID, "userId", userID)
+	response.RespondSuccess(w, http.StatusOK, "User removed from group successfully", nil)
+}
+
 func (h *Handler) respondWithError(w http.ResponseWriter, message string, statusCode int) {
 	response.RespondError(w, statusCode, "API_ERROR", message, nil)
 }
